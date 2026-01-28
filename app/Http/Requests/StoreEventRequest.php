@@ -15,7 +15,9 @@ class StoreEventRequest extends FormRequest
     {
         return [
             'type' => ['required', 'string', 'max:255'],
-            'payload' => ['nullable', 'array'],
+            'payload' => ['required', 'array'],
+            'source' => ['nullable', 'string', 'max:255'],
+            'occurred_at' => ['nullable', 'date'],
         ];
     }
 }

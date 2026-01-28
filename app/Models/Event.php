@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Event extends Model
 {
     protected $fillable = [
-        "type",
-        "payload",
+        'type',
+        'payload',
+        'source',
+        'occurred_at',
     ];
 
     protected $casts = [
-        "payload" => "array",
+        'payload' => 'array',
+        'occurred_at' => 'datetime',
     ];
 }
