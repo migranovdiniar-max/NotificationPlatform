@@ -16,7 +16,7 @@ class EventController extends Controller
 
     $event = Event::create($data);
 
-    ProcessEvent::dispatch($event);
+    ProcessEvent::dispatch($event->id);
 
     return response()->json([
         'id' => $event->id,

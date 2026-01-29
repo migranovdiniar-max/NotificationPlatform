@@ -8,23 +8,34 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class ProcessEvent implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public Event $event;
+    public int $eventId;
 
-    public function __construct(Event $event)
+    public function __construct(int $eventId)
     {
-        $this->event = $event;
+        $this->eventId = $eventId;
     }
 
     public function handle(): void
     {
-        logger()->info('Processing event', [
-            'id' => $this->event->id,
-            'type' => $this->event->type,
+        $event = Event::find($this->eventId);
+
+        if (!$event) {
+            Log::warning('Event not found', ['event_id' => $this->eventId]);
+            return;
+        }
+
+        Log::info('Processing event', [
+            'id' => $event->id,
+            'type' => $event->type,
+            'payload' => $event->payload,
         ]);
+
+        sleep(3);
     }
 }
