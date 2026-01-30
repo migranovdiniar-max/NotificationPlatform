@@ -1,59 +1,56 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# NotificationPlatform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Проект принимает события и создаёт уведомления. Уведомления отправляются через очередь. Каналы: log и webhook.
 
-## About Laravel
+## Что есть
+- POST /api/events — создаёт событие и ставит jobs в очередь.
+- GET /api/notifications — список уведомлений.
+- POST /api/notifications/{notification}/retry — повтор для failed.
+- GET /api/webhook-test — тестовый webhook (POST).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Требования
+- PHP 8.2+
+- Composer
+- Node.js 18+
+- Redis или RabbitMQ для очередей
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Установка
+1) Установи зависимости.
+   - composer install
+   - npm install
+2) Создай .env и ключ.
+   - cp .env.example .env
+   - php artisan key:generate
+3) Подними базу и миграции.
+   - php artisan migrate
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Запуск
+1) Запусти бэкенд.
+   - php artisan serve
+2) Запусти фронт.
+   - npm run dev
+3) Запусти воркер очереди.
+   - php artisan queue:work
 
-## Learning Laravel
+Открой http://127.0.0.1:8000
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Очереди
+По умолчанию стоит redis. В .env можно переключить:
+- QUEUE_CONNECTION=redis
+- QUEUE_CONNECTION=rabbitmq
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Redis
+Запуск через Docker:
+docker run -d --name redis -p 6379:6379 redis:7-alpine
 
-## Laravel Sponsors
+### RabbitMQ
+Запуск через Docker:
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+UI: http://127.0.0.1:15672 (guest/guest)
 
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Проверка
+1) Открой фронт и создай событие.
+2) Проверь, что статус уведомления меняется с pending на sent или failed.
+3) Для webhook можно указать URL http://127.0.0.1:8000/api/webhook-test
+4) Для имитации ошибки укажи recipient=fail и попробуй retry.
