@@ -25,7 +25,7 @@ return [
     | each backend supported by Laravel. You're also free to add more.
     |
     | Drivers: "sync", "database", "beanstalkd", "sqs", "redis",
-    |          "deferred", "background", "failover", "null"
+    |          "rabbitmq", "deferred", "background", "failover", "null"
     |
     */
 
@@ -71,6 +71,42 @@ return [
             'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
             'block_for' => null,
             'after_commit' => false,
+        ],
+
+        'rabbitmq' => [
+            'driver' => 'rabbitmq',
+            'queue' => env('RABBITMQ_QUEUE', 'default'),
+            'connection' => env('RABBITMQ_QUEUE_CONNECTION', 'default'),
+
+            'hosts' => [
+                [
+                    'host' => env('RABBITMQ_HOST', '127.0.0.1'),
+                    'port' => (int) env('RABBITMQ_PORT', 5672),
+                    'user' => env('RABBITMQ_USER', 'guest'),
+                    'password' => env('RABBITMQ_PASSWORD', 'guest'),
+                    'vhost' => env('RABBITMQ_VHOST', '/'),
+                ],
+            ],
+
+            'options' => [
+                'exchange' => [
+                    'name' => env('RABBITMQ_EXCHANGE_NAME', ''),
+                    'type' => env('RABBITMQ_EXCHANGE_TYPE', 'direct'),
+                    'passive' => env('RABBITMQ_EXCHANGE_PASSIVE', false),
+                    'durable' => env('RABBITMQ_EXCHANGE_DURABLE', true),
+                    'auto_delete' => env('RABBITMQ_EXCHANGE_AUTODELETE', false),
+                ],
+
+                'queue' => [
+                    'declare' => env('RABBITMQ_QUEUE_DECLARE', true),
+                    'bind' => env('RABBITMQ_QUEUE_BIND', true),
+                    'durable' => env('RABBITMQ_QUEUE_DURABLE', true),
+                    'auto_delete' => env('RABBITMQ_QUEUE_AUTODELETE', false),
+                    'exclusive' => env('RABBITMQ_QUEUE_EXCLUSIVE', false),
+                ],
+            ],
+
+            'worker' => env('RABBITMQ_WORKER', 'default'),
         ],
 
         'deferred' => [
