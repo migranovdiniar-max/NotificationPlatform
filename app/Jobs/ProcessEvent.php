@@ -9,6 +9,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
+use App\Jobs\SendNotification;
 
 class ProcessEvent implements ShouldQueue
 {
@@ -23,19 +25,21 @@ class ProcessEvent implements ShouldQueue
 
     public function handle(): void
     {
-        $event = Event::find($this->eventId);
+        $event = Event::findOrFail($this->eventId);
 
-        if (!$event) {
-            Log::warning('Event not found', ['event_id' => $this->eventId]);
-            return;
-        }
-
-        Log::info('Processing event', [
-            'id' => $event->id,
-            'type' => $event->type,
-            'payload' => $event->payload,
+        $notification = Notification::create([
+            'event_id' => $event->id,
+            'channel' => 'log',
+            'recipient' => 'system',
+            'status' => 'pending',
         ]);
 
-        sleep(3);
+        Log::info('Created notification for event', [
+            'event_id' => $event->id,
+            'type' => $event->type,
+            'notification_id' => $notification->id,
+        ]);
+
+        SendNotification::dispatch($notification->id);
     }
 }
