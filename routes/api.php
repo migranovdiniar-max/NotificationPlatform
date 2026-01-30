@@ -4,6 +4,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\NotificationController;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+Route::post('/webhook-test', function (Request $request) {
+    Log::info('Webhook received', [
+        'headers' => $request->headers->all(),
+        'body' => $request->all(),
+        'raw' => $request->getContent(),
+    ]);
+
+    return response()->json(['ok' => true]);
+});
+
 Route::post('/events', [EventController::class, 'store']);
 Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{event}', [EventController::class, 'show']);

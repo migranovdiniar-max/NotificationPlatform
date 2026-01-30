@@ -3,13 +3,12 @@
 namespace App\Jobs;
 
 use App\Models\Notification;
-use App\Notifications\Channels\ChannelResolver;
-use App\Notifications\Channels\NotificationChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SendNotification implements ShouldQueue
 {
@@ -25,7 +24,7 @@ class SendNotification implements ShouldQueue
         $this->notificationId = $notificationId;
     }
 
-    public function handle(ChannelResolver $resolver): void
+    public function handle(): void
     {
         $n = Notification::with('event')->findOrFail($this->notificationId);
 
@@ -35,16 +34,17 @@ class SendNotification implements ShouldQueue
             throw new \RuntimeException('Simulated sending failure');
         }
 
-        $channelClass = $resolver->resolve($n->channel);
-
-        /** @var NotificationChannel $channel */
-        $channel = app($channelClass);
-
-        $channel->send($n);
+        Log::info('Sending notification', [
+            'notification_id' => $n->id,
+            'event_id' => $n->event_id,
+            'channel' => $n->channel,
+            'recipient' => $n->recipient,
+            'attempt' => $n->attempts,
+        ]);
 
         $n->update([
-            'status'     => 'sent',
-            'sent_at'    => now(),
+            'status' => 'sent',
+            'sent_at' => now(),
             'last_error' => null,
         ]);
     }
@@ -52,7 +52,7 @@ class SendNotification implements ShouldQueue
     public function failed(\Throwable $e): void
     {
         Notification::where('id', $this->notificationId)->update([
-            'status'     => 'failed',
+            'status' => 'failed',
             'last_error' => $e->getMessage(),
         ]);
     }

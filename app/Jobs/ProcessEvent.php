@@ -3,14 +3,12 @@
 namespace App\Jobs;
 
 use App\Models\Event;
+use App\Models\Notification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use App\Models\Notification;
-use App\Jobs\SendNotification;
 
 class ProcessEvent implements ShouldQueue
 {
@@ -27,19 +25,36 @@ class ProcessEvent implements ShouldQueue
     {
         $event = Event::findOrFail($this->eventId);
 
-        $notification = Notification::create([
-            'event_id' => $event->id,
-            'channel' => 'log',
-            'recipient' => 'system',
-            'status' => 'pending',
-        ]);
+        $webhookUrl = data_get($event->payload, 'webhook_url');
 
-        Log::info('Created notification for event', [
+        $channel = $webhookUrl ? 'webhook' : 'log';
+        $recipient = $webhookUrl ? $webhookUrl : 'system';
+
+        // ключ идемпотентности (защита от дублей)
+        $dedupeKey = implode(':', [$event->id, $channel, $recipient]);
+
+        // создаём или берём существующую notification
+        $notification = Notification::firstOrCreate(
+            ['dedupe_key' => $dedupeKey],
+            [
+                'event_id' => $event->id,
+                'channel' => $channel,
+                'recipient' => $recipient,
+                'status' => 'pending',
+            ]
+        );
+
+        // если реально создали новую — отправляем в очередь на отправку
+        if ($notification->wasRecentlyCreated) {
+            SendNotification::dispatch($notification->id);
+        }
+
+        logger()->info('Created notification for event', [
             'event_id' => $event->id,
             'type' => $event->type,
-            'notification_id' => $notification->id,
+            'channel' => $channel,
+            'recipient' => $recipient,
+            'dedupe' => $notification->wasRecentlyCreated ? 'new' : 'existing',
         ]);
-
-        SendNotification::dispatch($notification->id);
     }
 }
