@@ -27,6 +27,10 @@ Laravel has the most extensive and thorough [documentation](https://laravel.com/
 
 If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
+## Queue Backends (Redis / RabbitMQ)
+
+This project supports Redis queues out of the box and can be configured to use RabbitMQ via the `vladimir-yuldashev/laravel-queue-rabbitmq` driver. Update `.env` with the connection you want to use and run a queue worker alongside the HTTP server. The examples below are written for local development. 
+
 ## Laravel Sponsors
 
 We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
